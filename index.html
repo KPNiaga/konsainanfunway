@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Borang Penerimaan Produk Funway (Konsainan)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PapaParse for reliable CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            funway: {
+              teal: '#0d9488',
+              dark: '#0f172a',
+              amber: '#f59e0b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar for dropdown menus */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-brand-100 selection:text-brand-900">
+
+  <!-- Header / Navigation -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm backdrop-blur-md bg-white/95">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-teal-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Borang Penerimaan Funway secara Konsainan</h1>
+          <p class="text-xs text-slate-500 font-medium">Borang Akuan Penerimaan Stok</p>
+        </div>
+      </div>
+      
+      <!-- Live Sync Pill -->
+      <div id="syncBadge" class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 transition-all">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span id="syncText">Menyambung Data...</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full flex-grow">
+    
+    <!-- Title Card -->
+    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-900/10 mb-6 relative overflow-hidden">
+      <!-- Decorative vector circles -->
+      <div class="absolute -right-8 -top-8 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute right-12 -bottom-10 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 text-teal-300 text-xs font-semibold backdrop-blur-sm mb-3">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Sistem Penerimaan Rasmi
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+          Maklum Balas Penerimaan Produk
+        </h2>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl">
+          Sila lengkapkan maklumat penerimaan produk Funway secara konsainan bersama bukti borang penerimaan bertandatangan untuk rekod kami.
+        </p>
+      </div>
+    </div>
+
+    <!-- Error/Notice Alert Box (Hidden by default) -->
+    <div id="globalNotice" class="hidden mb-6 p-4 rounded-xl text-sm border flex items-start space-x-3 transition-all"></div>
+
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 sm:p-8">
+      <form id="consignmentForm" class="space-y-6" onsubmit="event.preventDefault(); submitForm();">
+
+        <!-- 1. FIELD: NAMA PENERIMA / PIC -->
+        <div>
+          <label for="namaSelect" class="block text-sm font-semibold text-slate-800 mb-1.5">
+            Nama Anda <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <select id="namaSelect" required class="w-full appearance-none bg-slate-50 border border-slate-300 text-slate-900 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition duration-150 cursor-pointer">
+              <option value="" disabled selected>— Sila Pilih Nama Anda —</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="mt-1.5 text-xs text-slate-500">Pilih nama pegawai / wakil penerima daripada senarai rekod berdaftar.</p>
+        </div>
+
+        <!-- 2. FIELD: NAMA KOPERASI (Searchable Combobox) -->
+        <div class="relative" id="koperasiContainer">
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="koperasiInput" class="block text-sm font-semibold text-slate-800">
+              Koperasi <span class="text-rose-500">*</span>
+            </label>
+            <span id="koperasiCount" class="text-xs text-slate-400 font-medium">0 senarai</span>
+          </div>
+
+          <!-- Trigger / Input Box -->
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            
+            <input 
+              type="text" 
+              id="koperasiInput" 
+              autocomplete="off"
+              placeholder="Taip untuk cari nama koperasi..." 
+              required
+              class="w-full bg-slate-50 border border-slate-300 text-slate-900 rounded-xl pl-10 pr-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition duration-150"
+            />
+
+            <!-- Clear & Arrow Buttons -->
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
+              <button type="button" id="clearKoperasiBtn" class="hidden p-1 text-slate-400 hover:text-slate-600 rounded-full" title="Kosongkan pilihan">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+              <button type="button" id="toggleKoperasiBtn" class="p-1 text-slate-400 hover:text-slate-600 rounded-full" tabindex="-1">
+                <svg class="w-5 h-5 transform transition-transform duration-200" id="dropdownArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hidden storage for selected value object -->
+          <input type="hidden" id="selectedKoperasiValue" name="koperasi">
+
+          <!-- Dropdown options list -->
+          <div id="koperasiDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-40 max-h-64 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+            <div id="koperasiOptionsList" class="py-1">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+          <p class="mt-1.5 text-xs text-slate-500">Anda boleh taip kata kunci (cth: nama sekolah atau daerah) untuk mencari koperasi berkaitan.</p>
+        </div>
+
+        <!-- 3. FIELD: NEGERI (Automatic) -->
+        <div>
+          <label for="negeriDisplay" class="block text-sm font-semibold text-slate-800 mb-1.5">
+            Negeri
+          </label>
+          <div class="relative flex items-center">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="negeriDisplay" 
+              name="negeri"
+              readonly 
+              placeholder="Akan diisi secara automatik selepas memilih Koperasi" 
+              class="w-full bg-slate-100/90 border border-slate-200 text-slate-700 font-medium rounded-xl pl-10 pr-24 py-3 text-sm cursor-not-allowed select-none focus:outline-none"
+            />
+            <div class="absolute right-3">
+              <span id="negeriBadge" class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-md bg-slate-200 text-slate-600">
+                Auto-isi
+              </span>
+            </div>
+          </div>
+          <p class="mt-1.5 text-xs text-slate-500">Maklumat negeri dikesan secara terus berpandukan pangkalan data Koperasi.</p>
+        </div>
+
+        <!-- 4. FIELD: BORANG (Upload PDF / Image) -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-800 mb-1.5">
+            Borang Penerimaan Bertandatangan <span class="text-rose-500">*</span>
+          </label>
+          
+          <!-- Drop Area -->
+          <div 
+            id="dropzone" 
+            class="border-2 border-dashed border-slate-300 hover:border-brand-500 bg-slate-50/70 hover:bg-brand-50/30 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 group relative"
+          >
+            <input 
+              type="file" 
+              id="fileInput" 
+              accept=".pdf, image/png, image/jpeg, image/jpg, image/webp" 
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              required
+            />
+            
+            <div id="dropzonePrompt" class="flex flex-col items-center justify-center space-y-2">
+              <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-700">
+                  <span class="text-brand-600 underline">Klik untuk muat naik</span> atau seret fail ke sini
+                </p>
+                <p class="text-xs text-slate-500 mt-1">Sokongan format: <strong>PDF, JPG, PNG, WEBP</strong> (Maksimum: 15MB)</p>
+              </div>
+            </div>
+
+            <!-- Uploaded File Preview Container -->
+            <div id="filePreviewCard" class="hidden items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200 shadow-sm relative z-20">
+              <div class="flex items-center space-x-3 overflow-hidden">
+                <div id="fileTypeIcon" class="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center bg-teal-100 text-teal-700 font-bold text-xs uppercase">
+                  FILE
+                </div>
+                <div class="text-left truncate">
+                  <p id="fileName" class="text-sm font-medium text-slate-900 truncate">dokumen.pdf</p>
+                  <p id="fileSize" class="text-xs text-slate-500">1.2 MB</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                id="removeFileBtn" 
+                class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                title="Padamkan fail"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Image preview thumbnail if image -->
+          <div id="imagePreviewBox" class="hidden mt-3 text-center">
+            <img id="imageThumbnail" class="max-h-48 mx-auto rounded-xl border border-slate-200 shadow-sm object-contain" alt="Pratonton Borang">
+          </div>
+        </div>
+
+        <!-- 5. FIELD: CATATAN TAMBAHAN (Optional) -->
+        <div>
+          <label for="catatan" class="block text-sm font-semibold text-slate-800 mb-1.5">
+            Catatan Tambahan <span class="text-slate-400 font-normal">(Pilihan)</span>
+          </label>
+          <textarea 
+            id="catatan" 
+            rows="2" 
+            placeholder="Nyatakan sebarang catatan stok (cth: 5 kotak diterima dalam keadaan baik)"
+            class="w-full bg-slate-50 border border-slate-300 text-slate-900 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+          ></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button 
+            type="submit" 
+            id="submitBtn" 
+            class="w-full bg-gradient-to-r from-brand-600 to-teal-600 hover:from-brand-700 hover:to-teal-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-brand-500/25 transition duration-150 flex items-center justify-center space-x-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 cursor-pointer"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Hantar Maklum Balas Penerimaan</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Refresh Tool -->
+    <div class="mt-5 flex items-center justify-end text-xs text-slate-500 px-2">
+      <button id="refreshDataBtn" class="text-brand-600 hover:text-brand-800 underline flex items-center gap-1 font-medium transition cursor-pointer">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        Muat Semula Senarai
+      </button>
+    </div>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none max-w-sm">
+    <div id="toastContent" class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-sm">
+      <span id="toastIcon"></span>
+      <span id="toastMsg">Mesej</span>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal -->
+  <div id="successModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform transition-all scale-95 duration-200" id="successModalCard">
+      <div class="w-14 h-14 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 text-center mb-1">Penghantaran Berjaya!</h3>
+      <p class="text-xs text-slate-500 text-center mb-5">Maklum balas penerimaan produk konsainan telah direkodkan ke dalam sistem.</p>
+      
+      <!-- Summary details -->
+      <div class="bg-slate-50 rounded-xl p-4 text-xs space-y-2 border border-slate-200/80 mb-6 text-slate-700">
+        <div class="flex justify-between">
+          <span class="text-slate-400">ID Transaksi:</span>
+          <span class="font-mono font-bold text-slate-800" id="modalTransId">#FNW-2026-XXXX</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Pegawai:</span>
+          <span class="font-semibold text-slate-800" id="modalNama">-</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Koperasi:</span>
+          <span class="font-semibold text-slate-800 text-right max-w-[200px] truncate" id="modalKoperasi">-</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Negeri:</span>
+          <span class="font-semibold text-teal-700" id="modalNegeri">-</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Dokumen Lampiran:</span>
+          <span class="font-semibold text-slate-800 truncate max-w-[180px]" id="modalDocName">-</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <button 
+          type="button" 
+          onclick="closeModalAndReset()" 
+          class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl text-sm transition"
+        >
+          Hantar Borang Baharu
+        </button>
+        <button 
+          type="button" 
+          onclick="printReceipt()" 
+          class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition flex items-center justify-center space-x-1"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          <span>Cetak / Simpan Slip Pengesahan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-500 space-y-1">
+    <p>Sistem Pengurusan Konsainan. &copy; 2026 KPNiaga. Hak Cipta Terpelihara.</p>
+    <p class="text-slate-400 font-medium">oleh Seksyen Perdagangan &amp; Peruncitan, KPNiaga</p>
+  </footer>
+
+  <script>
+    // Configuration constants
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2HTj-IJgRNVn6K5t-qFY-hqPlGaG21b8IU_FmENmWky0P0oNQUKCk3LsgWKf0FTSAMKw3KSJflLi8/pub?gid=0&single=true&output=csv";
+    
+    // Google Apps Script Web App URL
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQP_zxQiNUpbfh9oKTfhvBJbgU-ExwdvEuia1hPwK06QW_hGaUHEUpJ05mC95SfvIcUg/exec";
+
+    // In-memory data store
+    let rawRecords = [];
+    let uniqueNames = [];
+    let koperasiList = [];
+    let selectedKoperasi = null;
+    let currentUploadedFile = null;
+
+    // Fallback sample data in case internet is limited or Google Sheets CORS has momentary timeout
+    const FALLBACK_DATA = [
+      { koperasi: "Koperasi SMK Seri Bintang Utara Kuala Lumpur Bhd", negeri: "Kuala Lumpur", nama: "Ahmad Farhan Bin Rosli" },
+      { koperasi: "Koperasi SMK Sultan Ismail Johor Bahru Bhd", negeri: "Johor", nama: "Nurul Aini Binti Kassim" },
+      { koperasi: "Koperasi Sekolah Menengah Kebangsaan Seksyen 9 Shah Alam Bhd", negeri: "Selangor", nama: "Mohd Hafizuddin Bin Ishak" },
+      { koperasi: "Koperasi Maktab Rendah Sains MARA Taiping Bhd", negeri: "Perak", nama: "Siti Fatimah Binti Zakaria" },
+      { koperasi: "Koperasi SMK Sultanah Asma Alor Setar Bhd", negeri: "Kedah", nama: "Khairul Anuar Bin Mat" },
+      { koperasi: "Koperasi SMK Kubang Kerian Kota Bharu Bhd", negeri: "Kelantan", nama: "Wan Nor Azlina Binti Wan Hassan" },
+      { koperasi: "Koperasi Kolej Islam Sultan Alam Shah Klang Bhd", negeri: "Selangor", nama: "Ahmad Farhan Bin Rosli" },
+      { koperasi: "Koperasi SMK St. Thomas Kuantan Bhd", negeri: "Pahang", nama: "Muhammad Danial Bin Yusof" },
+      { koperasi: "Koperasi SMK Agama Sheikh Abdul Malek Terengganu Bhd", negeri: "Terengganu", nama: "Zulkifli Bin Daud" },
+      { koperasi: "Koperasi SMK Tunku Besar Burhanuddin Seri Menanti Bhd", negeri: "Negeri Sembilan", nama: "Nurul Aini Binti Kassim" },
+      { koperasi: "Koperasi SMK Derma Kangar Perlis Bhd", negeri: "Perlis", nama: "Khairul Anuar Bin Mat" },
+      { koperasi: "Koperasi SMK Bukit Jambul Pulau Pinang Bhd", negeri: "Pulau Pinang", nama: "Mohd Hafizuddin Bin Ishak" },
+      { koperasi: "Koperasi SMK Bandaraya Kota Kinabalu Bhd", negeri: "Sabah", nama: "Doris Lingau Anak John" },
+      { koperasi: "Koperasi SMK Green Road Kuching Sarawak Bhd", negeri: "Sarawak", nama: "Bong Chee How" },
+      { koperasi: "Koperasi SMK Labuan Wilayah Persekutuan Bhd", negeri: "W.P. Labuan", nama: "Mohd Hafizuddin Bin Ishak" }
+    ];
+
+    // DOM Elements
+    const syncBadge = document.getElementById('syncBadge');
+    const syncText = document.getElementById('syncText');
+    const namaSelect = document.getElementById('namaSelect');
+    const koperasiInput = document.getElementById('koperasiInput');
+    const koperasiDropdown = document.getElementById('koperasiDropdown');
+    const koperasiOptionsList = document.getElementById('koperasiOptionsList');
+    const koperasiCount = document.getElementById('koperasiCount');
+    const clearKoperasiBtn = document.getElementById('clearKoperasiBtn');
+    const toggleKoperasiBtn = document.getElementById('toggleKoperasiBtn');
+    const dropdownArrow = document.getElementById('dropdownArrow');
+    const selectedKoperasiValue = document.getElementById('selectedKoperasiValue');
+    const negeriDisplay = document.getElementById('negeriDisplay');
+    const negeriBadge = document.getElementById('negeriBadge');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const dropzonePrompt = document.getElementById('dropzonePrompt');
+    const filePreviewCard = document.getElementById('filePreviewCard');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileTypeIcon = document.getElementById('fileTypeIcon');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+    const imagePreviewBox = document.getElementById('imagePreviewBox');
+    const imageThumbnail = document.getElementById('imageThumbnail');
+
+    /**
+     * Muat turun dataset Google Sheets CSV dan proses Column C, D, E
+     */
+    async function loadDataset() {
+      updateSyncStatus('loading', 'Menyambung Data...');
+      try {
+        const response = await fetch(CSV_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const csvText = await response.text();
+
+        Papa.parse(csvText, {
+          skipEmptyLines: true,
+          complete: function(results) {
+            if (results.data && results.data.length > 1) {
+              processCsvRows(results.data);
+              updateSyncStatus('online', 'Data Terkini');
+            } else {
+              useFallbackData('Data CSV kosong, menggunakan senarai sandaran.');
+            }
+          },
+          error: function(err) {
+            console.warn('PapaParse error:', err);
+            useFallbackData('Ralat membaca data CSV, data sandaran digunakan.');
+          }
+        });
+      } catch (err) {
+        console.warn('Fetch error:', err);
+        useFallbackData('Gagal menyambung ke pangkalan data atas talian. Data sandaran dimuatkan.');
+      }
+    }
+
+    function processCsvRows(rows) {
+      // Baris pertama (indeks 0) biasanya adalah tajuk lajur (Header)
+      const dataRows = rows.slice(1);
+      rawRecords = [];
+      const nameSet = new Set();
+      const kopMap = new Map();
+
+      dataRows.forEach(row => {
+        // Column C: Koperasi (indeks 2)
+        // Column D: Negeri (indeks 3)
+        // Column E: Nama (indeks 4)
+        const kop = (row[2] || '').trim();
+        const neg = (row[3] || '').trim();
+        const nm = (row[4] || '').trim();
+
+        if (kop) {
+          if (!kopMap.has(kop)) {
+            kopMap.set(kop, neg);
+          }
+        }
+        if (nm) {
+          nameSet.add(nm);
+        }
+      });
+
+      koperasiList = Array.from(kopMap.entries()).map(([koperasi, negeri]) => ({ koperasi, negeri }));
+      koperasiList.sort((a, b) => a.koperasi.localeCompare(b.koperasi));
+
+      uniqueNames = Array.from(nameSet).sort((a, b) => a.localeCompare(b));
+
+      populateNamaDropdown(uniqueNames);
+      koperasiCount.textContent = `${koperasiList.length} senarai`;
+    }
+
+    function useFallbackData(msg) {
+      showGlobalNotice(msg, 'warning');
+      const nameSet = new Set();
+      const kopMap = new Map();
+
+      FALLBACK_DATA.forEach(item => {
+        kopMap.set(item.koperasi, item.negeri);
+        if (item.nama) nameSet.add(item.nama);
+      });
+
+      koperasiList = Array.from(kopMap.entries()).map(([koperasi, negeri]) => ({ koperasi, negeri }));
+      uniqueNames = Array.from(nameSet).sort((a, b) => a.localeCompare(b));
+
+      populateNamaDropdown(uniqueNames);
+      koperasiCount.textContent = `${koperasiList.length} senarai`;
+      updateSyncStatus('offline', 'Mod Luar Talian');
+    }
+
+    function populateNamaDropdown(names) {
+      const currentSelected = namaSelect.value;
+      namaSelect.innerHTML = '<option value="" disabled selected>— Sila Pilih Nama Anda —</option>';
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        namaSelect.appendChild(opt);
+      });
+      if (currentSelected && names.includes(currentSelected)) {
+        namaSelect.value = currentSelected;
+      }
+    }
+
+    function renderKoperasiOptions(filterText = '') {
+      koperasiOptionsList.innerHTML = '';
+      const filter = filterText.toLowerCase().trim();
+
+      const filtered = koperasiList.filter(item => {
+        return item.koperasi.toLowerCase().includes(filter) || 
+               item.negeri.toLowerCase().includes(filter);
+      });
+
+      if (filtered.length === 0) {
+        koperasiOptionsList.innerHTML = `
+          <div class="px-4 py-3 text-xs text-slate-400 text-center">
+            Tiada koperasi ditemui untuk carian "${escapeHtml(filterText)}"
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const optionItem = document.createElement('div');
+        optionItem.className = 'px-4 py-2.5 hover:bg-brand-50 cursor-pointer text-sm transition flex flex-col justify-center';
+        
+        let highlightedKop = escapeHtml(item.koperasi);
+        if (filter) {
+          const reg = new RegExp(`(${escapeRegex(filter)})`, 'gi');
+          highlightedKop = highlightedKop.replace(reg, '<mark class="bg-amber-200 text-amber-900 rounded px-0.5">$1</mark>');
+        }
+
+        optionItem.innerHTML = `
+          <div class="font-medium text-slate-800 leading-snug">${highlightedKop}</div>
+          <div class="text-xs text-teal-600 font-semibold mt-0.5">${escapeHtml(item.negeri || 'Negeri tidak dinyatakan')}</div>
+        `;
+
+        optionItem.addEventListener('click', () => {
+          selectKoperasi(item);
+        });
+
+        koperasiOptionsList.appendChild(optionItem);
+      });
+    }
+
+    function selectKoperasi(item) {
+      selectedKoperasi = item;
+      koperasiInput.value = item.koperasi;
+      selectedKoperasiValue.value = item.koperasi;
+      negeriDisplay.value = item.negeri || 'Tidak dinyatakan';
+      negeriBadge.textContent = item.negeri ? 'Dikesan' : 'Auto';
+      negeriBadge.className = 'inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-md bg-teal-100 text-teal-800';
+
+      clearKoperasiBtn.classList.remove('hidden');
+      closeKoperasiDropdown();
+    }
+
+    function clearKoperasiSelection() {
+      selectedKoperasi = null;
+      koperasiInput.value = '';
+      selectedKoperasiValue.value = '';
+      negeriDisplay.value = '';
+      negeriBadge.textContent = 'Auto-isi';
+      negeriBadge.className = 'inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-md bg-slate-200 text-slate-600';
+      clearKoperasiBtn.classList.add('hidden');
+    }
+
+    function openKoperasiDropdown() {
+      renderKoperasiOptions(koperasiInput.value);
+      koperasiDropdown.classList.remove('hidden');
+      dropdownArrow.classList.add('rotate-180');
+    }
+
+    function closeKoperasiDropdown() {
+      koperasiDropdown.classList.add('hidden');
+      dropdownArrow.classList.remove('rotate-180');
+    }
+
+    // Combobox Event Listeners
+    koperasiInput.addEventListener('focus', () => {
+      openKoperasiDropdown();
+    });
+
+    koperasiInput.addEventListener('input', (e) => {
+      openKoperasiDropdown();
+      clearKoperasiBtn.classList.toggle('hidden', !e.target.value);
+      selectedKoperasiValue.value = '';
+      negeriDisplay.value = '';
+    });
+
+    toggleKoperasiBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (koperasiDropdown.classList.contains('hidden')) {
+        koperasiInput.focus();
+        openKoperasiDropdown();
+      } else {
+        closeKoperasiDropdown();
+      }
+    });
+
+    clearKoperasiBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearKoperasiSelection();
+      koperasiInput.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('koperasiContainer').contains(e.target)) {
+        closeKoperasiDropdown();
+      }
+    });
+
+    function handleFileSelection(file) {
+      if (!file) return;
+
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|jpg|jpeg|png|webp)$/i)) {
+        showToast('Format fail tidak disokong. Sila pilih PDF atau Gambar.', 'error');
+        return;
+      }
+
+      if (file.size > 15 * 1024 * 1024) {
+        showToast('Saiz fail melebihi had 15MB.', 'error');
+        return;
+      }
+
+      currentUploadedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = formatBytes(file.size);
+
+      const isImage = file.type.startsWith('image/');
+      fileTypeIcon.textContent = isImage ? 'IMG' : 'PDF';
+      fileTypeIcon.className = isImage 
+        ? 'w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center bg-amber-100 text-amber-700 font-bold text-xs uppercase'
+        : 'w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center bg-rose-100 text-rose-700 font-bold text-xs uppercase';
+
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imageThumbnail.src = e.target.result;
+          imagePreviewBox.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imagePreviewBox.classList.add('hidden');
+      }
+
+      dropzonePrompt.classList.add('hidden');
+      filePreviewCard.classList.remove('hidden');
+      filePreviewCard.classList.add('flex');
+    }
+
+    function resetFileUpload() {
+      currentUploadedFile = null;
+      fileInput.value = '';
+      dropzonePrompt.classList.remove('hidden');
+      filePreviewCard.classList.add('hidden');
+      filePreviewCard.classList.remove('flex');
+      imagePreviewBox.classList.add('hidden');
+      imageThumbnail.src = '';
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileSelection(e.target.files[0]);
+      }
+    });
+
+    removeFileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetFileUpload();
+    });
+
+    // Drag and Drop
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-brand-500', 'bg-brand-50/50');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-brand-500', 'bg-brand-50/50');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFileSelection(e.dataTransfer.files[0]);
+      }
+    });
+
+    /**
+     * Helper to convert File to Base64
+     */
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+          resolve(encoded);
+        };
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    /**
+     * Submit Form Handler
+     */
+    async function submitForm() {
+      const nama = namaSelect.value;
+      const koperasi = selectedKoperasiValue.value || koperasiInput.value;
+      const negeri = negeriDisplay.value;
+      const file = currentUploadedFile;
+      const catatan = document.getElementById('catatan').value;
+
+      // Validation
+      if (!nama) {
+        showToast('Sila pilih Nama anda daripada senarai.', 'error');
+        namaSelect.focus();
+        return;
+      }
+
+      if (!koperasi) {
+        showToast('Sila pilih Koperasi penerima.', 'error');
+        koperasiInput.focus();
+        return;
+      }
+
+      if (!file) {
+        showToast('Sila muat naik borang penerimaan (PDF/Gambar).', 'error');
+        fileInput.focus();
+        return;
+      }
+
+      // Button loading state
+      const submitBtn = document.getElementById('submitBtn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Sedang Menyimpan Data & Memuat Naik Fail...</span>
+      `;
+
+      try {
+        // Tukar fail kepada format Base64 untuk penghantaran Google Drive
+        const base64Data = await fileToBase64(file);
+
+        const payload = {
+          nama: nama,
+          koperasi: koperasi,
+          negeri: negeri,
+          catatan: catatan,
+          file: {
+            name: file.name,
+            mimeType: file.type || 'application/pdf',
+            base64: base64Data
+          }
+        };
+
+        // Hantar maklumat ke Google Apps Script Web App
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors', // elak isu sekatan CORS dengan Google Script
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        // Generate pseudo reference number
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const transId = `FNW-REC-${randomNum}`;
+
+        // Populate Modal Details
+        document.getElementById('modalTransId').textContent = `#${transId}`;
+        document.getElementById('modalNama').textContent = nama;
+        document.getElementById('modalKoperasi').textContent = koperasi;
+        document.getElementById('modalNegeri').textContent = negeri;
+        document.getElementById('modalDocName').textContent = file.name;
+
+        // Display Modal
+        const successModal = document.getElementById('successModal');
+        successModal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+
+        showToast('Maklum balas dan borang berjaya direkodkan!', 'success');
+
+      } catch (error) {
+        console.error('Submission error:', error);
+        showToast('Ralat semasa menghantar borang: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    }
+
+    function closeModalAndReset() {
+      document.getElementById('successModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      
+      // Reset form
+      document.getElementById('consignmentForm').reset();
+      clearKoperasiSelection();
+      resetFileUpload();
+      showToast('Borang telah ditetapkan semula untuk rekod seterusnya', 'info');
+    }
+
+    function printReceipt() {
+      window.print();
+    }
+
+    /**
+     * Update Status Header Indicator
+     */
+    function updateSyncStatus(status, text) {
+      syncText.textContent = text;
+      if (status === 'online') {
+        syncBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        syncBadge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-emerald-500';
+      } else if (status === 'loading') {
+        syncBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
+        syncBadge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+      } else {
+        syncBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200';
+        syncBadge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-slate-400';
+      }
+    }
+
+    function showGlobalNotice(msg, type = 'info') {
+      const box = document.getElementById('globalNotice');
+      box.className = `mb-6 p-4 rounded-xl text-xs sm:text-sm border flex items-center space-x-3 transition-all ${
+        type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-brand-50 border-brand-200 text-brand-800'
+      }`;
+      box.innerHTML = `
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>${escapeHtml(msg)}</span>
+      `;
+      box.classList.remove('hidden');
+    }
+
+    /**
+     * Non-intrusive Toast Alert
+     */
+    let toastTimer = null;
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      let iconSvg = '';
+      if (type === 'error') {
+        iconSvg = `<svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      } else if (type === 'success') {
+        iconSvg = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+      } else {
+        iconSvg = `<svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      }
+
+      toastIcon.innerHTML = iconSvg;
+      toastMsg.textContent = message;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    }
+
+    function formatBytes(bytes, decimals = 1) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function formatDateDisplay(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    }
+
+    function escapeHtml(string) {
+      if (!string) return '';
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeRegex(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Refresh button trigger
+    document.getElementById('refreshDataBtn').addEventListener('click', () => {
+      loadDataset();
+    });
+
+    // Initialize application on window load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDataset();
+    });
+  </script>
+</body>
+</html>
