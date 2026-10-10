@@ -792,10 +792,15 @@
       `;
 
       try {
+        // Jana nombor rujukan transaksi terlebih dahulu supaya boleh disimpan ke Google Sheet
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const transId = `FNW-REC-${randomNum}`;
+
         // Tukar fail kepada format Base64 untuk penghantaran Google Drive
         const base64Data = await fileToBase64(file);
 
         const payload = {
+          noRujukan: `#${transId}`,
           nama: nama,
           koperasi: koperasi,
           negeri: negeri,
@@ -814,10 +819,6 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
-
-        // Generate pseudo reference number
-        const randomNum = Math.floor(1000 + Math.random() * 9000);
-        const transId = `FNW-REC-${randomNum}`;
 
         // Simpan data untuk dikongsi ke WhatsApp
         const now = new Date();
